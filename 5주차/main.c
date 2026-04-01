@@ -1,7 +1,7 @@
-#include <stdio.h>
+﻿#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define MAX_STACK_SIZE 10
+#define MAX_STACK_SIZE 20
 // Let's implement the stack first
 typedef char element;
 
@@ -56,7 +56,7 @@ element Peek(StackType* s)
 //convert Postfix -> Infix
 int eval(const char str[])
 {
-	/* 
+	/*
 	<LOGIC>
 	1. if str[i] is the number, Push onto the stack
 	2. if str[i] is '+','-','/','*', Pop two values, culculator the result, push it back onto the stack
@@ -106,18 +106,20 @@ int prec(char ch)
 }
 
 //convert Infix -> Postfix
-void infixToPostfix(const char str[])
+StackType infixToPostfix(const char str[])
 {
 	int i = 0;
 	int length = strlen(str);
 	char ch, topOp;
-	StackType s;
+	StackType s; // 잠시 저장용
 	Init(&s);
+	StackType s2; // 진짜 저장용
+	Init(&s2);
 	/*
 	1. 일단 숫자면 2스택에 저장
 	2. 짝괄호가 나오면 원래 괄호가 나올 때까지 pop
 	3. 기호는 1스택에 저장
-	4. 상위 기호일 경우 
+	4. 상위 기호일 경우나 같은 우선 순위의 기호면 진짜 스택에 pop후 가짜 스택에 Push
 	*/
 	/*
 	<case>
@@ -131,13 +133,13 @@ void infixToPostfix(const char str[])
 		ch = str[i];
 		switch (ch)
 		{
-		case '(': Push(&s, ch); break;  
-		case ')': 
+		case '(': Push(&s, ch); break;
+		case ')':
 		{
 			topOp = Pop(&s); // 일단 하나를 빼놓기
 			while (topOp != '(')
 			{
-				printf("%c", topOp);
+				Push(&s2,topOp);
 				topOp = Pop(&s);
 			}
 			break;
@@ -146,25 +148,36 @@ void infixToPostfix(const char str[])
 		{
 			while (!IsEmpty(&s) && prec(ch) <= prec(Peek(&s))) // 스택의 안의 기호가 우선순위가 높다면
 			{
-				printf("%c", Pop(&s));// 우선순위 높은 연산자 먼저 Pop하고 스택에 집어넣기(우선순위 같아도 실행)
+				Push(&s2,Pop(&s));// 우선순위 높은 연산자 먼저 Pop하고 스택에 집어넣기(우선순위 같아도 실행)
 			}
 			Push(&s, ch);
 			break;
 		}
 		default: // 숫자 일 때
-			printf("%c", ch);
+			Push(&s2,ch);
 			break;
 		}
 	}
 	while (!IsEmpty(&s))
-		printf("%c",Pop(&s));
+		Push(&s2, Pop(&s));
+	return s2;
+}
+
+void allPop(StackType s)
+{
+	int size = s.top +1;
+	int ch[MAX_STACK_SIZE];
+	for (int i = 0; i < size; i++)
+	{
+		printf("%c", s.data[i]);
+	}
 }
 
 int main()
 {
-	int result = 0;
-	
-	infixToPostfix("(3+4)*5");
-	
+
+	StackType result = infixToPostfix("2+3*(5+6)-4/2");
+	allPop(result);
+
 	return 0;
 }
